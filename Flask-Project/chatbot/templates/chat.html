@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat - AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Scrollbar */
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        .chat-messages::-webkit-scrollbar-track {
+            background: linear-gradient(to bottom, #f3f4f6, #e5e7eb);
+            border-radius: 10px;
+        }
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(to bottom, #2563eb, #7c3aed);
+        }
+
+        /* Message Animations */
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(30px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes pulseGlow {
+            0%, 100% {
+                box-shadow: 0 4px 6px rgba(59, 130, 246, 0.3);
+            }
+            50% {
+                box-shadow: 0 8px 20px rgba(59, 130, 246, 0.6), 0 0 30px rgba(139, 92, 246, 0.4);
+            }
+        }
+        
+        .message-bot {
+            animation: slideInLeft 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .message-user {
+            animation: slideInRight 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+        .pulse-glow {
+            animation: pulseGlow 2s infinite;
+        }
+        .chat-messages {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <div class="container mx-auto max-w-4xl p-4">
+        <!-- Header with Animation -->
+        <div class="bg-gradient-to-r from-blue-600 to-purple-600 rounded-t-xl shadow-lg p-6 text-white flex justify-between items-center fade-in pulse-glow">
+            <div>
+                <h1 class="text-2xl font-bold mb-1 transform transition-transform duration-300 hover:scale-105">🤖 AI Chatbot Assistant</h1>
+                <p class="text-blue-100 text-sm">Data Science & ML Helper</p>
+            </div>
+            <a href="{{ url_for('clear') }}" class="bg-white bg-opacity-20 hover:bg-opacity-30 text-white px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-300 transform hover:scale-110 hover:shadow-lg active:scale-95">
+                Clear Chat
+            </a>
+        </div>
+
+        <!-- Chat Container -->
+        <div class="bg-white shadow-lg fade-in" style="min-height: calc(100vh - 280px);">
+            <div class="chat-messages p-6 space-y-4" style="max-height: calc(100vh - 280px); overflow-y: auto;">
+                <!-- Welcome Message -->
+                {% if not chat_history %}
+                <div class="flex items-start mb-4 message-bot">
+                    <div class="bg-gradient-to-r from-blue-100 to-blue-200 rounded-2xl px-5 py-3 max-w-xl shadow-sm transform transition-all duration-300 hover:shadow-lg hover:-translate-y-1 hover:scale-105">
+                        <p class="text-gray-800 text-sm md:text-base leading-relaxed">
+                            Hello! I'm your AI assistant. Ask me anything about data science, machine learning, or any topic you'd like!
+                        </p>
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Chat Messages with Staggered Animation -->
+                {% for chat in chat_history %}
+                    <!-- User Message -->
+                    <div class="flex items-start mb-4 justify-end message-user">
+                        <div class="bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-md rounded-2xl px-5 py-3 max-w-xl transform transition-all duration-300 hover:shadow-xl hover:scale-105 hover:-translate-y-1">
+                            <p class="text-sm md:text-base leading-relaxed">{{ chat.user }}</p>
+                            <p class="text-xs text-blue-200 mt-1">{{ chat.timestamp }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Bot Message -->
+                    <div class="flex items-start mb-4 justify-start message-bot">
+                        <div class="bg-gradient-to-r from-gray-100 to-gray-200 text-gray-800 shadow-sm rounded-2xl px-5 py-3 max-w-xl transform transition-all duration-300 hover:shadow-lg hover:scale-105 hover:-translate-y-1">
+                            <p class="text-sm md:text-base leading-relaxed">{{ chat.bot }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ chat.timestamp }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <!-- Input Form with Animation -->
+            <div class="border-t border-gray-200 p-4 bg-gray-50 fade-in">
+                <form method="POST" action="{{ url_for('chat') }}" class="flex space-x-3">
+                    <input 
+                        type="text" 
+                        name="message"
+                        placeholder="Type your message here..." 
+                        class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-300 hover:shadow-md focus:shadow-lg"
+                        autocomplete="off"
+                        required
+                        autofocus
+                    >
+                    <button 
+                        type="submit" 
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-semibold transition-all duration-300 flex items-center space-x-2 transform hover:scale-110 hover:shadow-xl active:scale-95"
+                    >
+                        <span>Send</span>
+                        <span>📤</span>
+                    </button>
+                </form>
+                <div class="mt-2 flex items-center justify-between">
+                    <span class="text-sm text-gray-600 transition-all duration-300 hover:text-blue-600 hover:font-semibold">Messages: {{ chat_history|length }}</span>
+                    <a href="{{ url_for('index') }}" class="text-sm text-gray-600 hover:text-gray-800 transition-all duration-300 transform hover:scale-110 hover:font-semibold">
+                        ← Back to Home
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer with Animation -->
+        <div class="bg-gray-100 rounded-b-xl p-4 text-center text-sm text-gray-600 fade-in">
+            <p class="transition-all duration-300 hover:text-blue-600 hover:font-semibold">Built with Flask & Python | Pure Server-Side Rendering | No JavaScript</p>
+        </div>
+    </div>
+</body>
+</html>
